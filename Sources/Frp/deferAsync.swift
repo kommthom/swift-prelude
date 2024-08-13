@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  deferAsync.swift
+//
 //
 //  Created by Thomas Benninghaus on 01.08.24.
 //
@@ -14,7 +14,7 @@ public func deferAsync(_ perform: @escaping @Sendable () async -> Void) async {
 }
 
 @discardableResult
-func run<T>(_ operation: () async throws -> T, defer deferredOperation: () async throws -> Void) async throws -> T {
+public func run<T>(_ operation: () async throws -> T, defer deferredOperation: () async throws -> Void) async throws -> T {
     do {
         let result = try await operation()
         try await deferredOperation()
@@ -24,13 +24,14 @@ func run<T>(_ operation: () async throws -> T, defer deferredOperation: () async
         throw error
     }
 }
-/* Usage:
+/*
+ Usage:
 try await run {
-print("doing")
-try await Task.sleep(for: .seconds(1))
-print("done")
-} defer: {
-try await Task.sleep(for: .milliseconds(100))
-print("cleanup done")
+        print("doing")
+        try await Task.sleep(for: .seconds(1))
+        print("done")
+    } defer: {
+        try await Task.sleep(for: .milliseconds(100))
+        print("cleanup done")
 }
 */

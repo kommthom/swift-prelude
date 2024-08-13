@@ -11,14 +11,14 @@ infix operator &&~: infixr4 // conjOver
 infix operator <>~: infixr4 // appendOver
 
 /// A setter lens.
-public typealias Setter<S, T, A, B> = (@escaping (A) -> B) -> (S) -> T
+public typealias Setter<S: Sendable, T: Sendable, A: Sendable, B: Sendable> = @Sendable (@escaping @Sendable (A) -> B) -> @Sendable (S) -> T
 
-public func lens<S, T, A, B>(_ to: @escaping (S) -> (A, (B) -> T)) -> Setter<S, T, A, B> {
-  return { pab in to >>> first(pab) >>> { bf in bf.1(bf.0) } }
+public func lens<S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ to: @escaping @Sendable (S) -> (A, @Sendable (B) -> T)) -> Setter<S, T, A, B> {
+    return { pab in to >>> first(pab) >>> { bf in bf.1(bf.0) } }
 }
 
-public func lens<S, T, A, B>(_ get: @escaping (S) -> A, _ set: @escaping (S, B) -> T) -> Setter<S, T, A, B> {
-  return lens({ s in (get(s), { b in set(s, b) }) })
+public func lens<S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ get: @escaping @Sendable (S) -> A, _ set: @escaping @Sendable (S, B) -> T) -> Setter<S, T, A, B> {
+    return lens({ s in (get(s), { b in set(s, b) }) })
 }
 
 /// Maps a function over the focus of a setter.
@@ -28,8 +28,8 @@ public func lens<S, T, A, B>(_ get: @escaping (S) -> A, _ set: @escaping (S, B) 
 ///   - over: A transformation function from the focus of a setter to a new value.
 /// - Returns: A function that takes a source and returns a target by mapping a function over the focus of a
 ///   setter.
-public func %~ <S, T, A, B>(setter: Setter<S, T, A, B>, over: @escaping (A) -> B) -> (S) -> T {
-  return setter(over)
+public func %~ <S: Sendable, T: Sendable, A: Sendable, B: Sendable>(setter: Setter<S, T, A, B>, over: @escaping @Sendable (A) -> B) -> @Sendable (S) -> T {
+    return setter(over)
 }
 
 /// Sets the focus of a setter to a constant value.
@@ -39,8 +39,8 @@ public func %~ <S, T, A, B>(setter: Setter<S, T, A, B>, over: @escaping (A) -> B
 ///   - set: A new value to replace the focus of a setter.
 /// - Returns: A function that takes a source and returns a target by replacing the focus of a setter with the
 ///   given value.
-public func .~ <S, T, A, B>(setter: Setter<S, T, A, B>, set: B) -> (S) -> T {
-  return setter %~ const(set)
+public func .~ <S: Sendable, T: Sendable, A: Sendable, B: Sendable>(setter: Setter<S, T, A, B>, set: B) -> @Sendable (S) -> T {
+    return setter %~ const(set)
 }
 
 /// Adds a value to the focus of a setter.
@@ -49,8 +49,8 @@ public func .~ <S, T, A, B>(setter: Setter<S, T, A, B>, set: B) -> (S) -> T {
 ///   - setter: A setter with a near-semiring focus.
 ///   - value: A value added to the focus of a setter.
 /// - Returns: A function that takes a source and returns a target by adding a value to the focus of a setter.
-public func +~ <S, T, A: NearSemiring>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 + value }
+public func +~ <S: Sendable, T: Sendable, A: NearSemiring & Sendable>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 + value }
 }
 
 /// Multiplies the focus of a setter.
@@ -60,8 +60,8 @@ public func +~ <S, T, A: NearSemiring>(setter: Setter<S, T, A, A>, value: A) -> 
 ///   - value: A value the focus of a setter is multiplied by.
 /// - Returns: A function that takes a source and returns a target by multiplying the focus of a setter with
 ///   the given value.
-public func *~ <S, T, A: NearSemiring>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 * value }
+public func *~ <S: Sendable, T: Sendable, A: NearSemiring & Sendable>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 * value }
 }
 
 /// Subtracts from the focus of a setter.
@@ -71,8 +71,8 @@ public func *~ <S, T, A: NearSemiring>(setter: Setter<S, T, A, A>, value: A) -> 
 ///   - value: A value subtracted from the focus of a setter.
 /// - Returns: A function that takes a source and returns a target by subtracting a value from the focus of a
 ///   setter.
-public func -~ <S, T, A: Ring>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 - value }
+public func -~ <S: Sendable, T: Sendable, A: Ring & Sendable>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 - value }
 }
 
 /// Divides the focus of a setter.
@@ -82,8 +82,8 @@ public func -~ <S, T, A: Ring>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T
 ///   - value: A value the focus of a setter is divided by.
 /// - Returns: A function that takes a source and returns a target by dividing the focus of a setter by the
 ///   given value.
-public func /~ <S, T, A: EuclideanRing>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 / value }
+public func /~ <S: Sendable, T: Sendable, A: EuclideanRing>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 / value }
 }
 
 /// Performs a logical OR operation on the focus of a setter.
@@ -93,8 +93,8 @@ public func /~ <S, T, A: EuclideanRing>(setter: Setter<S, T, A, A>, value: A) ->
 ///   - value: A value the focus of a setter joins.
 /// - Returns: A function that takes a source and returns a target by joining the focus of a setter with the
 ///   given value.
-public func ||~ <S, T, A: HeytingAlgebra>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 || value }
+public func ||~ <S: Sendable, T: Sendable, A: HeytingAlgebra>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 || value }
 }
 
 /// Performs a logical AND operation on the focus of a setter.
@@ -104,8 +104,8 @@ public func ||~ <S, T, A: HeytingAlgebra>(setter: Setter<S, T, A, A>, value: A) 
 ///   - value: A value the focus of a setter meets.
 /// - Returns: A function that takes a source and returns a target by meeting the focus of a setter with the
 ///   given value.
-public func &&~ <S, T, A: HeytingAlgebra>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 && value }
+public func &&~ <S: Sendable, T: Sendable, A: HeytingAlgebra>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 && value }
 }
 
 /// Performs a semigroup operation on the focus of a setter.
@@ -115,6 +115,6 @@ public func &&~ <S, T, A: HeytingAlgebra>(setter: Setter<S, T, A, A>, value: A) 
 ///   - value: A value appended to the focus of a setter.
 /// - Returns: A function that takes a source and returns a new target by performing a semigroup operation on
 ///   the focus of a setter and the given value.
-public func <>~ <S, T, A: Semigroup>(setter: Setter<S, T, A, A>, value: A) -> (S) -> T {
-  return setter %~ { $0 <> value }
+public func <>~ <S: Sendable, T: Sendable, A: Semigroup>(setter: Setter<S, T, A, A>, value: A) -> @Sendable (S) -> T {
+    return setter %~ { $0 <> value }
 }

@@ -1,1 +1,1 @@
-public func absurd<A>(_ never: Never) -> A {}
+public func absurd<A: Sendable>(_ never: Never) -> A {}

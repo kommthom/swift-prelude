@@ -1,3 +1,3 @@
 import Prelude
 
-//public typealias Review<S, T, A, B> = (Tagged<A, B>) -> Tagged<S, T>
+//public typealias Review<S: Sendable, T: Sendable, A: Sendable, B: Sendable> = (Tagged<A, B>) -> Tagged<S, T>

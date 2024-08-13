@@ -1,5 +1,5 @@
 public protocol Ring: Semiring {
-  static func - (lhs: Self, rhs: Self) -> Self
+    static func - (lhs: Self, rhs: Self) -> Self
 }
 
 extension Double: Ring {}
@@ -16,23 +16,23 @@ extension UInt32: Ring {}
 extension UInt64: Ring {}
 
 extension Unit: Ring {
-  public static func -(lhs: Unit, rhs: Unit) -> Unit {
-    return unit
-  }
+    public static func -(lhs: Unit, rhs: Unit) -> Unit {
+        return unit
+    }
 }
 
-public func - <A, B: Ring>(lhs: @escaping (A) -> B, rhs: @escaping (A) -> B) -> (A) -> B {
-  return { a in
-    lhs(a) - rhs(a)
-  }
+public func - <A: Sendable, B: Ring>(lhs: @escaping @Sendable (A) -> B, rhs: @escaping @Sendable (A) -> B) -> @Sendable (A) -> B {
+    return { a in
+        lhs(a) - rhs(a)
+    }
 }
 
 public func negate<A: Ring>(_ a: A) -> A {
-  return A.zero - a
+    return A.zero - a
 }
 
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-  import CoreGraphics
+    import CoreGraphics
 
-  extension CGFloat: Ring {}
+    extension CGFloat: Ring {}
 #endif

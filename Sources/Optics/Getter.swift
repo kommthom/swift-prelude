@@ -3,7 +3,7 @@ import Prelude
 infix operator .^: infixl8 // viewOn
 
 /// A getter lens.
-public typealias Getter<S, T, A, B> = Fold<A, S, T, A, B>
+public typealias Getter<S: Sendable, T: Sendable, A: Sendable, B: Sendable> = Fold<A, S, T, A, B>
 
 // TODO: Add `first` to `Forget`.
 //public func lens<S, T, A, B>(_ to: @escaping (S) -> (A, (B) -> T)) -> Getter<S, T, A, B> {
@@ -22,13 +22,23 @@ public typealias Getter<S, T, A, B> = Fold<A, S, T, A, B>
 ///   - lhs: The root getter.
 ///   - rhs: A getter with a source matching the target of the left-hand getter.
 /// - Returns: A new getter from the source of the left-hand getter to the target of the right-hand getter.
-public func <<< <A, B, S, T, U, V>(
-  _ lhs: @escaping Getter<U, V, S, T>,
-  _ rhs: @escaping Getter<S, T, A, B>)
-  -> Getter<U, V, A, B> {
-
+public func <<< <A: Sendable, B: Sendable, S: Sendable, T: Sendable, U: Sendable, V: Sendable>(_ lhs: @escaping Getter<U, V, S, T>, _ rhs: @escaping Getter<S, T, A, B>) -> Getter<U, V, A, B> {
     return { forget in
-      .init(forget.unwrap <<< rhs(Forget(id)).unwrap <<< lhs(Forget(id)).unwrap)
+        .init(
+            forget.unwrap
+            <<<
+            rhs(
+                Forget(
+                    { id($0) }
+                )
+            ).unwrap
+            <<<
+            lhs(
+                Forget(
+                    { id($0) }
+                )
+            ).unwrap
+        )
     }
 }
 
@@ -36,8 +46,12 @@ public func <<< <A, B, S, T, U, V>(
 ///
 /// - Parameter getter: A getter.
 /// - Returns: A function from the source of a getter to its focus.
-public func view<S, T, A, B>(_ getter: @escaping Getter<S, T, A, B>) -> (S) -> A {
-  return getter(.init(id)).unwrap
+public func view<S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ getter: @escaping Getter<S, T, A, B>) -> @Sendable (S) -> A {
+    return getter(
+        .init(
+            { id($0) }
+        )
+    ).unwrap
 }
 
 /// An operator version of `view`, flipped.
@@ -48,16 +62,24 @@ public func view<S, T, A, B>(_ getter: @escaping Getter<S, T, A, B>) -> (S) -> A
 ///   - source: A source value.
 ///   - getter: A getter from a source to its focus.
 /// - Returns: The focus of the source.
-public func .^ <S, T, A, B>(source: S, getter: @escaping Getter<S, T, A, B>) -> A {
-  return source |> view(getter)
+public func .^ <S: Sendable, T: Sendable, A: Sendable, B: Sendable>(source: S, getter: @escaping Getter<S, T, A, B>) -> A {
+    return source 
+        |>
+        view(
+            getter
+        )
 }
 
 /// Converts a function into a getter.
 ///
 /// - Parameter f: A function from a source value to its focus.
 /// - Returns: A getter.
-public func to<R, S, T, A, B>(_ f: @escaping (S) -> A) -> Fold<R, S, T, A, B> {
-  return { p in
-    .init(p.unwrap <<< f)
-  }
+public func to<R: Sendable, S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ f: @escaping @Sendable (S) -> A) -> Fold<R, S, T, A, B> {
+    return { p in
+        .init(
+            p.unwrap
+            <<<
+            f
+        )
+    }
 }

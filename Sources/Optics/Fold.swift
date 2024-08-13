@@ -2,50 +2,62 @@ import Prelude
 
 infix operator ^?: infixl8 // previewOn
 
-struct First<A>: Monoid {
-  let unwrap: A?
+struct First<A: Sendable>: Monoid {
+    let unwrap: A?
 
-  init(_ unwrap: A?) {
-    self.unwrap = unwrap
-  }
+    init(_ unwrap: A?) {
+        self.unwrap = unwrap
+    }
 
-  static func <>(lhs: First<A>, rhs: First<A>) -> First<A> {
-    return .init(lhs.unwrap ?? rhs.unwrap)
-  }
-
-  static var empty: First<A> { return .init(nil) }
+    static func <>(lhs: First<A>, rhs: First<A>) -> First<A> {
+        return .init(lhs.unwrap ?? rhs.unwrap)
+    }
+    static var empty: First<A> { return .init(nil) }
 }
 
-public typealias Fold<R, S, T, A, B> = (Forget<R, A, B>) -> Forget<R, S, T>
+public typealias Fold<R, S, T, A, B> = @Sendable (Forget<R, A, B>) -> Forget<R, S, T>
 
-func under<A, B>(_ f: @escaping (First<A>) -> First<B>) -> (A?) -> B? {
-  return { a in f(.init(a)).unwrap }
+func under<A: Sendable, B: Sendable>(_ f: @escaping @Sendable (First<A>) -> First<B>) -> @Sendable (A?) -> B? {
+    return { a in f(.init(a)).unwrap }
 }
 
-func unwrap<A>(_ wrapped: First<A>) -> A? {
-  return wrapped.unwrap
+func unwrap<A: Sendable>(_ wrapped: First<A>) -> A? {
+    return wrapped.unwrap
 }
 
-func preview<S, T, A, B>(_ fold: @escaping Fold<First<A>, S, T, A, B>) -> (S) -> A? {
-  return unwrap <<< foldMapOf(fold)(First.init <<< A?.some)
+func preview<S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ fold: @escaping Fold<First<A>, S, T, A, B>) -> @Sendable (S) -> A? {
+    return { unwrap($0) }
+        <<<
+        foldMapOf(fold)(
+            { First.init($0) }
+            <<<
+            { A?.some($0) }
+        )
 }
 
-func previewOn<S, T, A, B>(_ source: S, _ fold: @escaping Fold<First<A>, S, T, A, B>) -> A? {
-  return preview(fold) <| source
+func previewOn<S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ source: S, _ fold: @escaping Fold<First<A>, S, T, A, B>) -> A? {
+    return preview(fold)
+        <|
+        source
 }
 
-func ^? <S, T, A, B> (source: S, fold: @escaping Fold<First<A>, S, T, A, B>) -> A? {
-  return previewOn(source, fold)
+func ^? <S: Sendable, T: Sendable, A: Sendable, B: Sendable> (source: S, fold: @escaping Fold<First<A>, S, T, A, B>) -> A? {
+    return previewOn(source, fold)
 }
 
-func foldMapOf<R, S, T, A, B>(_ fold: @escaping Fold<R, S, T, A, B>) -> (@escaping (A) -> R) -> (S) -> R {
-  return { f in
-    fold(.init(f)).unwrap
-  }
+func foldMapOf<R: Sendable, S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ fold: @escaping Fold<R, S, T, A, B>) -> @Sendable (@escaping @Sendable (A) -> R) -> @Sendable (S) -> R {
+    return { f in
+        { fold(
+                .init(f)
+            )
+            .unwrap($0) }
+    }
 }
 
-func foldOf<S, T, A, B>(_ fold: @escaping Fold<A, S, T, A, B>) -> (S) -> A {
-  return foldMapOf(fold)(id)
+func foldOf<S: Sendable, T: Sendable, A: Sendable, B: Sendable>(_ fold: @escaping Fold<A, S, T, A, B>) -> (S) -> A {
+    return foldMapOf(fold)(
+        { id($0) }
+    )
 }
 
 //func allOf<R: HeytingAlgebra, S, T, A, B>(_ fold: Fold

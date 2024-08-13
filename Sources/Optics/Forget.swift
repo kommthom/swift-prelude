@@ -1,7 +1,7 @@
-public struct Forget<R, A, B> {
-  public let unwrap: (A) -> R
+public struct Forget<R: Sendable, A: Sendable, B: Sendable>: Sendable {
+    public let unwrap: @Sendable (A) -> R
 
-  public init(_ unwrap: @escaping (A) -> R) {
-    self.unwrap = unwrap
-  }
+    public init(_ unwrap: @escaping @Sendable (A) -> R) {
+        self.unwrap = unwrap
+    }
 }
