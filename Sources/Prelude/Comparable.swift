@@ -18,7 +18,7 @@ public func compare<A: Comparable & Sendable>(_ a: A) -> (A) -> Comparator {
         a
 }
 
-extension Bool: Comparable {
+extension Bool: @retroactive Comparable {
     public static func < (lhs: Bool, rhs: Bool) -> Bool {
         return (lhs, rhs) == (false, true)
     }

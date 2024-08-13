@@ -1,7 +1,7 @@
 import Prelude
 import Foundation
 
-extension KeyPath: @unchecked Sendable {}
+extension KeyPath: @unchecked @retroactive Sendable {}
 
 extension KeyPath {
     /// Composes two key paths together. An operator version of `appending`.

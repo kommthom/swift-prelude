@@ -1,6 +1,6 @@
 import Foundation
 
-extension KeyPath: @unchecked Sendable {}
+extension KeyPath: @unchecked @retroactive Sendable {}
 
 public func get<Root: Sendable, Value: Sendable>(_ keyPath: KeyPath<Root, Value>) -> @Sendable (Root) -> Value {
     return { root in

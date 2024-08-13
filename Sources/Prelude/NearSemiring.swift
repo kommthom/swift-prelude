@@ -64,16 +64,16 @@ extension UInt64: NearSemiring {
     public static let zero: UInt64 = 0
 }
 
-extension Unit: NearSemiring {
-    public static func + (lhs: Unit, rhs: Unit) -> Unit {
+extension Prelude.Unit: NearSemiring {
+    public static func + (lhs: Prelude.Unit, rhs: Prelude.Unit) -> Prelude.Unit {
         return unit
     }
 
-    public static func * (lhs: Unit, rhs: Unit) -> Unit {
+    public static func * (lhs: Prelude.Unit, rhs: Prelude.Unit) -> Prelude.Unit {
         return unit
     }
-
-    public static let zero: Unit = unit
+    
+    public static let zero: Prelude.Unit = unit
 }
 
 public func + <A, B: NearSemiring>(lhs: @escaping @Sendable (A) -> B, rhs: @escaping @Sendable (A) -> B) -> @Sendable (A) -> B {
